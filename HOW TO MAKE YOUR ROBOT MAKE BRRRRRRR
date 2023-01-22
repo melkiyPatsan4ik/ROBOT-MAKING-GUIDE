@@ -1,0 +1,111 @@
+	SUBSYSTEM FOR MOTORS
+
+So, at the beginning you must make new file in subsystems and don’t forget in the add .java this is very important.
+For example: motorSubsystems.java. After that you extends your subsystem. 
+public class MotorSubsystem extends SubsystemBase {
+
+Then you identify your motor controller (NOT THE MOTORS)
+For example, identifying VICTORSP controller will look like that: 
+ leftfront = new VictorSP(3);
+        rightfront = new VictorSP(0);
+        leftback = new VictorSP(2);
+        rightback = new VictorSP(1);
+We have 4 controllers. Each of them has channel you can know channel by red and white wire from controller which goes to roborio. 
+On the roborio you can see number 0,1,2 etc. If controller connected to 1 number that means it have first channel. 
+After identifying controllers, you have to group them, so if you will push stick 2 motors will move and not only one. 
+ leftMotors = new MotorControllerGroup(leftback, leftfront);
+        rightMotors = new MotorControllerGroup(rightback, rightfront);
+        rightMotors.setInverted(true);
+In the end I inverted right motors because they were moving in opposite way. 
+
+In the end of MotorSubsystem I wrote this 
+       drive = new DifferentialDrive(leftMotors, rightMotors);
+        drive.setMaxOutput(0.8);
+I told code what he needs to use for moving 2 left motors and 2 right motors. Because we made groups, we don’t have to write leftback and leftfront.
+And made max values of motors so it will not blow up. 
+
+That’s all for subsystem of motors. 
+
+
+
+
+
+	COMMANDS – DRIVECOMMAND 
+
+Extend class 
+public class DriveCommands extends CommandBase {
+	
+So we have to use our previous thing subsystem, I named it MotorSubsystem so I write this. You could name it otherwise. 
+And I add m_drive so I will able use this subsystem.
+What means final I have no idea :3
+  public final MotorSubsystem m_drive;
+        public final DoubleSupplier m_forward; 
+        public final DoubleSupplier m_rotation;
+
+
+After that I add doublesupplier. Don’t remember why supplier just do this. Then I write m_forward (if tank drive “m_left”, this is example of arcadedrive.)
+And m_rotation (if tank drive “m_right”) So this means that our wheels will move by number of double as I understand. 
+
+After that I use all things I wrote before. Because they had just names but was not used. 
+public DriveCommands(MotorSubsystem subsystem, DoubleSupplier left, DoubleSupplier right){
+            m_drive = subsystem;
+            m_forward = left;
+            m_rotation = right;
+            addRequirements(m_drive);
+And write m_something = something so it will easier to use. 
+I have no idea what addRequirements means. 
+
+
+
+
+
+
+Don’t know why but there is have to be @Override. So if we are executing our command our robot will move. We have to write .getAsDouble so robot will know 
+which numbers use to move. There is two types of moving as you can see tankDrive and arcadeDrive you can you one of them.  
+@Override
+        public void execute(){
+          //  m_drive.drive.tankDrive(m_forward.getAsDouble(), m_rotation.getAsDouble());
+            m_drive.drive.arcadeDrive(m_forward.getAsDouble(), m_rotation.getAsDouble());
+        }
+
+
+That’s all for drivecommand now we have to add gamepad input to our code. We will make it in robot container. 
+
+
+
+
+
+
+
+	ROBOT CONTAINER – INPUT MANAGEMENT
+
+ public final MotorSubsystem m_MotorSubsystem = new MotorSubsystem();
+  public static PS4Controller PS4gamepad = new PS4Controller(0);
+  public final DriveCommands m_driveCommand = new DriveCommands(
+    m_MotorSubsystem,
+    () -> PS4gamepad.getLeftY(),
+    () -> PS4gamepad.getRightY());
+
+So we add our motorsubsystem to robotcontainer so we will able use it. 
+Then we add our PS4 controller. (Please use ps4controller but if you want something different google) 
+Also we add our drivecommands our different file as motorsubsystem. 
+
+() -> this is lambda, so it make our numbers get back to 0 after we don’t change them anymore. As I know. 
+
+After lambda we write .getLeftY(); .getRightY(); So If we will change this it will goes back and our robot will not move all the time even if we don’t touch our gamepad. 
+
+public RobotContainer() {
+    // Configure the button bindings
+    configureButtonBindings();
+    m_MotorSubsystem.setDefaultCommand(m_driveCommand);
+  }
+Add here motorsubsystem and our drivecommand. It just have to be like that. 
+
+In the end write this. 
+  }
+  public Command getDriveCommand() {
+    return m_driveCommand;
+  }
+This will make our moving command work
+
+Now your robot should work. 
